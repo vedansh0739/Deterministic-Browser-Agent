@@ -8,7 +8,7 @@
 #
 # Set OPENAI_API_KEY to your API key, and then run this from a terminal.
 #
-
+import logging
 from playwright.sync_api import sync_playwright
 import time
 from sys import argv, exit, platform
@@ -168,15 +168,15 @@ black_listed_elements = set(["html", "head", "title", "meta", "iframe", "body", 
 class Crawler:
 	def __init__(self):
 		self.browser = (
-			sync_playwright()
-			.start()
+			sync_playwright() # playwright executes synchronously which is easier to understand
+			.start() # sets up the necassary environment to control the browser
 			.chromium.launch(
 				headless=False,
 			)
 		)
 
-		self.page = self.browser.new_page()
-		self.page.set_viewport_size({"width": 1280, "height": 1080})
+		self.page = self.browser.new_page() #same as opening a new tab
+		self.page.set_viewport_size({"width": 1280, "height": 1080})#refers to the CSS pixels which vary from device to device and can change if you zoom in or zoom out of the page
 
 	def go_to_page(self, url):
 		self.page.goto(url=url if "://" in url else "http://" + url)
@@ -218,7 +218,8 @@ class Crawler:
 
 	def enter(self):
 		self.page.keyboard.press("Enter")
-
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	def crawl(self):
 		page = self.page
 		page_element_buffer = self.page_element_buffer
@@ -227,7 +228,7 @@ class Crawler:
 		page_state_as_text = []
 
 		device_pixel_ratio = page.evaluate("window.devicePixelRatio")
-		if platform == "darwin" and device_pixel_ratio == 1:  # lies
+		if platform == "darwin" and device_pixel_ratio == 1:  #lies
 			device_pixel_ratio = 2
 
 		win_scroll_x 		= page.evaluate("window.scrollX")
@@ -236,9 +237,11 @@ class Crawler:
 		win_left_bound 		= page.evaluate("window.pageXOffset") 
 		win_width 			= page.evaluate("window.screen.width")
 		win_height 			= page.evaluate("window.screen.height")
-		win_right_bound 	= win_left_bound + win_width
+		win_right_bound 	= win_left_bound + win_width # stored in the form of CSS pixels
 		win_lower_bound 	= win_upper_bound + win_height
+		
 		document_offset_height = page.evaluate("document.body.offsetHeight")
+		
 		document_scroll_height = page.evaluate("document.body.scrollHeight")
 
 #		percentage_progress_start = (win_upper_bound / document_scroll_height) * 100
@@ -285,8 +288,8 @@ class Crawler:
   
 		layout 				= document["layout"]
 		layout_node_index 	= layout["nodeIndex"]
-		bounds 				= layout["bounds"]
-
+		bounds 				= layout["bounds"]#values of elements are stored in the form of 
+  							#CSS pixels,ie.1280 * 1080 MULTIPLIED BY device pixel ratio i.e. 2 which is basically the same as the physical device resolution (not the css resolution)
 		cursor = 0
 		html_elements_text = []
 
@@ -310,7 +313,7 @@ class Crawler:
 			else:
 				return "text"
 
-		#attributes[index], ["type", "placeholder", "aria-label", "title", "alt"]
+		#["id", "content", "class", "container"], ["type", "placeholder", "aria-label", "title", "alt"]
 		def find_attributes(attributes, keys):
 			values = {}
 
@@ -330,7 +333,8 @@ class Crawler:
 			return values
 
 		def add_to_hash_tree(hash_tree, tag, node_id, node_name, parent_id):
-			parent_id_str = str(parent_id)
+			parent_id_str = str(parent_id) 
+			
 			if not parent_id_str in hash_tree:
 				parent_name = strings[node_names[parent_id]].lower()
 				grand_parent_id = parent[parent_id]
@@ -343,7 +347,7 @@ class Crawler:
 
 			# even if the anchor is nested in another anchor, we set the "root" for all descendants to be ::Self
 			if node_name == tag:
-				value = (True, node_id)
+				value = (True, node_id)# node_id=index
 			elif (
 				is_parent_desc_anchor
 			):  # reuse the parent's anchor_id (which could be much higher in the tree)
@@ -354,18 +358,26 @@ class Crawler:
 					None,
 				)  # not a descendant of an anchor, most likely it will become text, an interactive element or discarded
 
-			hash_tree[str(node_id)] = value
+			hash_tree[str(node_id)] = value # node_id=index
 
 			return value
 
 		for index, node_name_index in enumerate(node_names):
-			node_parent = parent[index]
-			node_name = strings[node_name_index].lower()
+#node_names=[5,3,7,3,7,3], where node_names[0]=5=node_name_index; strings[node_name_index] is the name of the node
+#parent=[77,52,54,22,44], where parent[0]=77=parent_id and string[node_names[parent_id]] is the name of the parent
+#
+#
+#
+#
+#
+
+			node_parent = parent[index] # parent[] is parallel to node_names[] and therefore also stores values- lets say x which will represent the html element type when used as strings[x]
+			node_name = strings[node_name_index].lower()  #node name is the element, ie, div, link, button
 
 			is_ancestor_of_anchor, anchor_id = add_to_hash_tree(
-				anchor_ancestry, "a", index, node_name, node_parent
+				anchor_ancestry, "a", index, node_name, node_parent # anchor_ancestry = {"-1": (False, None)}
 			)
-
+			
 			is_ancestor_of_button, button_id = add_to_hash_tree(
 				button_ancestry, "button", index, node_name, node_parent
 			)
@@ -381,7 +393,7 @@ class Crawler:
 
 			[x, y, width, height] = bounds[cursor]
 			#bounds cursor will give
-			x /= device_pixel_ratio
+			x /= device_pixel_ratio  #everything here is divided by 2 to convert the physical device resolution to the CSS resolution because this will be compared to the full viewport resolution which is of the form CSS
 			y /= device_pixel_ratio
 			width /= device_pixel_ratio
 			height /= device_pixel_ratio
@@ -407,6 +419,11 @@ class Crawler:
 			element_attributes = find_attributes(
 				attributes[index], ["type", "placeholder", "aria-label", "title", "alt"]
 			)
+   
+			print("|||||||||||")
+			print(attributes[index])
+			print("|||||||||||")
+			time.sleep(0.2)
 
 			ancestor_exception = is_ancestor_of_anchor or is_ancestor_of_button
 			ancestor_node_key = (
@@ -544,7 +561,9 @@ class Crawler:
 			id_counter += 1
 
 		print("Parsing time: {:0.2f} seconds".format(time.time() - start))
-		return elements_of_interest
+		return elements_of_interest #this is wrong as it doesn't have input and textarea
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 if (
 	__name__ == "__main__"

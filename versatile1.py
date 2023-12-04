@@ -354,8 +354,6 @@ class Crawler:
 			return value
 
 		for index, node_name_index in enumerate(node_names):
-      #node_names=[3,5,75,65,23] where strings[3] will give element type of node 1
-      #don't worry about how parent array looks like
 			node_parent = parent[index]
 			node_name = strings[node_name_index].lower()
 
@@ -419,7 +417,7 @@ class Crawler:
 				else child_nodes.setdefault(str(ancestor_node_key), [])
 			)
 
-			if node_name == "#text" and ancestor_exception: # if it is a text inside an anchor or button then child_nodes[ancestor]=[{type:"type",value:"the text inside",},{.....} .....]
+			if node_name == "#text" and ancestor_exception:
 				text = strings[node_value[index]]
 				if text == "|" or text == "•":
 					continue
@@ -437,8 +435,6 @@ class Crawler:
 				
 				for key in element_attributes:
 					if ancestor_exception:
- # if it is not a text inside an anchor or button then child_nodes[ancestor]=[{type:"attribute",key:"<key>",value:"<value>",},{.....} .....]
- # the problem here is that if we have an input/textarea that is non_exception, it's attributes will be stored in meta_data without the input/textarea word itself
 						ancestor_node.append({
 							"type": "attribute",
 							"key":  key,
@@ -451,7 +447,6 @@ class Crawler:
 
 			if node_value[index] >= 0:
 				element_node_value = strings[node_value[index]]
-
 				if element_node_value == "|": #commonly used as a seperator, does not add much context - lets save ourselves some token space
 					continue
 			elif (

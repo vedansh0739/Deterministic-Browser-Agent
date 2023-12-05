@@ -73,7 +73,7 @@ CURRENT BROWSER CONTENT:
 <link id=5>(Google apps)</link>
 <link id=6>Sign in</link>
 <img id=7 alt="(Google)"/>
-<input id=8 alt="Search"></input>
+<textarea id=8 alt="Search"></textarea>
 <button id=9>(Search by voice)</button>
 <button id=10>(Google Search)</button>
 <button id=11>(I'm Feeling Lucky)</button>
@@ -102,7 +102,7 @@ CURRENT BROWSER CONTENT:
 <link id=5>(Google apps)</link>
 <link id=6>Sign in</link>
 <img id=7 alt="(Google)"/>
-<input id=8 alt="Search"></input>
+<textarea id=8 alt="Search"></textarea>
 <button id=9>(Search by voice)</button>
 <button id=10>(Google Search)</button>
 <button id=11>(I'm Feeling Lucky)</button>
@@ -135,7 +135,7 @@ CURRENT BROWSER CONTENT:
 <text id=9>Sep 28, 2022</text>
 <text id=10>7:00 PM</text>
 <text id=11>2 people</text>
-<input id=12 alt="Location, Restaurant, or Cuisine"></input> 
+<textarea id=12 alt="Location, Restaurant, or Cuisine"></textarea> 
 <button id=13>Let’s go</button>
 <text id=14>It looks like you're in Peninsula. Not correct?</text> 
 <button id=15>Get current location</button>
@@ -297,6 +297,8 @@ class Crawler:
 				return "link"
 			if node_name == "input":
 				return "input"
+			if node_name=="textarea":
+				return "textarea"
 			if node_name == "img":
 				return "img"
 			if (
@@ -404,6 +406,7 @@ class Crawler:
 			element_attributes = find_attributes(
 				attributes[index], ["type", "placeholder", "aria-label", "title", "alt"]
 			)
+			
 
 			ancestor_exception = is_ancestor_of_anchor or is_ancestor_of_button
 			ancestor_node_key = (
@@ -447,6 +450,13 @@ class Crawler:
 					else:
 						meta_data.append(element_attributes[key])
 
+
+
+			# print(f"||||{child_nodes}|||")
+			# print(f"||||{meta_data}|||")
+			# print()
+			# time.sleep(0.2)
+
 			element_node_value = None
 
 			if node_value[index] >= 0:
@@ -464,7 +474,10 @@ class Crawler:
 				if node_input_text_index >= 0 and text_index >= 0:
 					element_node_value = strings[text_index]
 
-			# remove redudant elements
+			# next 2 lines were part of the initial code
+			# if ancestor_exception and (node_name != "a" and node_name != "button"):
+			# 	continue
+			
 			if ancestor_exception and (node_name != "a" and node_name != "button"):
 				continue
 

@@ -576,7 +576,7 @@ if (
 		prompt = prompt.replace("$objective", objective)
 		prompt = prompt.replace("$url", url[:100])
 		prompt = prompt.replace("$previous_command", previous_command)
-		prompt = prompt.replace("$browser_content", browser_content[:4500])
+		prompt = prompt.replace("$browser_content", browser_content)
 		response = client.chat.completions.create(model="gpt-3.5-turbo",messages=[{"role": "user", "content": prompt}])
 		return response.choices[0].message.content
 

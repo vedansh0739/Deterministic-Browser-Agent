@@ -183,11 +183,11 @@ class Crawler:
 	def scroll(self, direction):
 		if direction == "up":
 			self.page.evaluate(
-				"(document.scrollingElement || document.body).scrollTop = (document.scrollingElement || document.body).scrollTop - window.innerHeight;"
+				"(document.scrollingElement || document.body).scrollTop = (document.scrollingElement || document.body).scrollTop - (window.innerHeight/2);"
 			)
 		elif direction == "down":
 			self.page.evaluate(
-				"(document.scrollingElement || document.body).scrollTop = (document.scrollingElement || document.body).scrollTop + window.innerHeight;"
+				"(document.scrollingElement || document.body).scrollTop = (document.scrollingElement || document.body).scrollTop + (window.innerHeight/2);"
 			)
 
 	def click(self, id):

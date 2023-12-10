@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+#THE FIRST ONE THAT WORKS WITHOUT PROMPT SPLITTING OR ANYTHING FANCY AT ALL
+
+# 
+# !/usr/bin/env python3
 #
 # natbot.py
 #

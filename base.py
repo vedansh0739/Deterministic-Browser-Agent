@@ -1,9 +1,12 @@
-#!/usr/bin/env python3
+# THE SECOND ONE WHERE WE TRIED TO SPLIT THE PROMPT
+# 
+# !/usr/bin/env python3
 #
 # natbot.py
 #
 # Set OPENAI_API_KEY to your API key, and then run this from a terminal.
 #
+import re
 
 from playwright.sync_api import sync_playwright
 import time
@@ -21,8 +24,8 @@ if len(argv) >= 2:
 			"Running in quiet mode (HTML and other content hidden); \n"
 			+ "exercise caution when running suggested commands."
 		)
-
-prompt_template = """
+prompt_template=[None] * 5
+prompt_template[0] = """
 You are an agent controlling a browser. You are given:
 
 	(1) an objective that you are trying to achieve
@@ -62,7 +65,8 @@ Once you are on the restaurant web page, scroll down to get a better view. Then 
 
 Don't try to interact with elements that you can't see.
 
-Here are some examples:
+The following part of this prompt and the next prompt need to be taken into consideration as they consist of the necessary 4 Examples that will be required for decision making.
+Here are the Examples:
 
 EXAMPLE 1:
 ==================================================
@@ -120,9 +124,9 @@ OBJECTIVE: Make a reservation for 4 at Dorsia at 8pm
 CURRENT URL: https://www.google.com/
 YOUR COMMAND: 
 TYPESUBMIT 8 "dorsia nyc opentable"
-==================================================
+=================================================="""
 
-EXAMPLE 3:
+prompt_template[1]="""EXAMPLE 3:
 ==================================================
 CURRENT BROWSER CONTENT:
 ------------------
@@ -149,11 +153,145 @@ YOUR COMMAND:
 TYPESUBMIT 12 "dorsia new york city"
 ==================================================
 
+EXAMPLE 4:
+==================================================
+PART OF CURRENT BROWSER CONTENT:
+------------------
+<link id=0/>
+<link id=1>Skip to main content</link>
+<link id=2 aria-label="Amazon.in">.in</link>
+<link id=3>Delivering to Mumbai 400072
+                 
+                   Update location</link>
+<input id=5 text Search Amazon.in Search Amazon.in>men's tshirt</input>
+<link id=6 aria-label="Choose a language for shopping.">EN</link>
+<link id=7>Hello, sign in Account & Lists</link>
+<link id=8>Returns & Orders</link>
+<link id=9 aria-label="0 items in cart">0 
+        Cart</link>
+<link id=10 aria-label="Open Menu">All</link>
+<link id=11>Fresh</link>
+<link id=12>Amazon miniTV</link>
+<link id=13>Sell</link>
+<link id=14>Best Sellers</link>
+<link id=15>Today's Deals</link>
+<link id=16>Mobiles</link>
+<link id=17>Customer Service</link>
+<link id=18>Electronics</link>
+<link id=19>New Releases</link>
+<link id=20>Prime</link>
+<link id=21>Home & Kitchen</link>
+<link id=22>Gift Ideas</link>
+<link id=23>Fashion</link>
+<link id=24>Amazon Pay</link>
+<link id=25>Computers</link>
+<link id=26>Books</link>
+<link id=27>Beauty & Personal Care</link>
+<link id=28>Coupons</link>
+<link id=29>Toys & Games</link>
+<link id=30>Home Improvement</link>
+<link id=31>Gift Cards</link>
+<link id=32>Sports, Fitness & Outdoors</link>
+<link id=33>Health, Household & Personal Care</link>
+<link id=34>Grocery & Gourmet Foods</link>
+<link id=35>Car & Motorbike</link>
+<link id=36>Baby</link>
+<link id=37>Subscribe & Save</link>
+<link id=38>Video Games</link>
+<link id=39>Audible</link>
+<link id=40>Pet Supplies</link>
+<link id=41>AmazonBasics</link>
+<link id=42>Kindle eBooks</link>
+<link id=43 aria-label="New Launches from Mobile, Electronics & more" alt="New Launches from Mobile, Electronics & more"/>
+<link id=44/>
+<link id=50 aria-label="Sponsored ad from Red Tape. "Stylish T-shirts for Men by Red Tape." Shop Red Tape."/>
+<link id=51/>
+<link id=52>Stylish T-shirts for Men by Red Tape Stylish T-shirts for Men by Red Tape</link>
+<link id=53>Shop Red  Tape</link>
+<link id=54 aria-label="Go to detail page for "Red Tape Men T-Shirt." Eligible for Prime."/>
+<link id=55 alt="Red Tape Men T-Shirt"/>
+<link id=56>Red Tape Men T-Shirt Red Tape Men T-Shirt</link>
+<link id=57 aria-label="Rated 3.5 out of 5 stars by 12 reviews. Go to review section.">3.5 out of 5 stars.   12</link>
+<link id=58 aria-label="Go to detail page for "Red Tape Polo T-Shirt for Men | Comfortable & Breathable." Eligible for Prime."/>
+<link id=59 alt="Red Tape Polo T-Shirt for Men | Comfortable & Breathable"/>
+<link id=60>Red Tape Polo T-Shirt for Men | Comfortable & Breathable Red Tape Polo T-Shirt for Men | Comfortable & Breathable</link>
+<link id=61 aria-label="Rated 3.7 out of 5 stars by 16 reviews. Go to review section.">3.7 out of 5 stars.   16</link>
+<link id=62/>
+<img id=64/>
+<link id=67 alt="Sponsored Ad - DAMENSCH Men’s Fluid Cotton Lycra Full T- Shirt"/>
+<link id=68>+3 colors/patterns</link>
+<link id=69 aria-label="View Sponsored information or leave ad feedback">Sponsored</link>
+<link id=71>Men’s Fluid Cotton Lycra Full T- Shirt</link>
+<link id=72>5.0 out of 5 stars</link>
+<link id=73>1</link>
+<link id=74>₹1,200 ₹ 1,200   M.R.P:  ₹1,290 ₹1,290</link>
+<link id=78 alt="Sponsored Ad - Damensch Men Regular Fit T-Shirt"/>
+<link id=79>+2 colors/patterns</link>
+<link id=80 aria-label="View Sponsored information or leave ad feedback">Sponsored</link>
+<link id=82>Men Regular Fit T-Shirt</link>
+<link id=83>4.6 out of 5 stars</link>
+<link id=84>17</link>
+<link id=85>₹1,403 ₹ 1,403   M.R.P:  ₹1,990 ₹1,990</link>
+<link id=88 alt="Sponsored Ad - DAMENSCH Men’s Fluid Cotton Full T-Shirt"/>
+<link id=89>+5 colors/patterns</link>
+<link id=90 aria-label="View Sponsored information or leave ad feedback">Sponsored</link>
+<link id=92>Men’s Fluid Cotton Full T-Shirt</link>
+<link id=93>4.4 out of 5 stars</link>
+<link id=94>25</link>
+<link id=95>₹1,356 ₹ 1,356   M.R.P:  ₹1,490 ₹1,490</link>
+<link id=99 alt="Sponsored Ad - XYXX Men 100% Cotton Polo Tshirt"/>
+<link id=100>+7 colors/patterns</link>
+<link id=101 aria-label="View Sponsored information or leave ad feedback">Sponsored</link>
+<link id=103>Men 100% Cotton Polo Tshirt</link>
+<link id=104>4.1 out of 5 stars</link>
+<link id=105>238</link>
+<link id=107>₹549 ₹ 549   M.R.P:  ₹699 ₹699</link>
+<link id=112 title="tab to go back to filtering menu">Go back to filtering menu</link>
+<link id=113 title="tab to skip to main search results">Skip to main search results</link>
+<link id=115 type="checkbox">Get It Today</link>
+<link id=116 type="checkbox">Get It by Tomorrow</link>
+<link id=117 type="checkbox">Get It in 2 Days</link>
+<link id=119>Men's T-Shirts & Polos</link>
+<link id=120>Men's T-Shirts</link>
+<link id=121>Men's Polos</link>
+<link id=122>Baby Clothing</link>
+<link id=124 aria-label="4 Stars & Up">4 Stars & Up 
+       & Up</link>
+<link id=125 aria-label="3 Stars & Up">3 Stars & Up 
+       & Up</link>
+<link id=126 aria-label="2 Stars & Up">2 Stars & Up 
+       & Up</link>
+<link id=127 aria-label="1 Star & Up">1 Star & Up 
+       & Up</link>
+<link id=129 type="checkbox">EYEBOGLER</link>
+<link id=130 type="checkbox">Allen Solly</link>
+<link id=131 type="checkbox">Van Heusen</link>
+<link id=132 type="checkbox">Amazon Brand - Symbol</link>
+<link id=133 type="checkbox">LEOTUDE</link>
+<link id=134 type="checkbox">BULLMER</link>
+<link id=135 type="checkbox">Lux Cozi</link>
+<link id=136 aria-label="See more, Brand">See more</link>
+<link id=138>Under ₹300</link>
+<link id=139>₹300 - ₹500</link>
+<link id=140>₹500 - ₹1,000</link>
+<link id=141>₹1,000 - ₹1,500</link>
+<link id=142>Over ₹1,500</link>
+<input id=144 text Min/>
+<input id=146 text Max/>
+<link id=149>All Discounts</link>
+<link id=150>Today's Deals</link>
+<link id=152 type="checkbox">Top Brands</link>
+<link id=153 type="checkbox">Made for Amazon</link>
+<link id=154 type="checkbox">Premium Brands</link>
+<link id=156 type="checkbox">Asymmetric Neck</link>
+------------------
+OBJECTIVE: Go to amazon, search for men's tshirt and click on the first result. Click on Add to cart.Go to cart. Then buy it.
+CURRENT URL: https://www.amazon.in/s?k=men%27s+tshirt
+YOUR COMMAND: 
+CLICK 54
+=================================================="""
 
-
-
-
-The current browser content, objective, and current URL follow. Reply with your next command to the browser.
+prompt_template[2]="""The current browser content, objective, and current URL follow. Reply with your next command to the browser.The command generated should be of the exact fashion as it was in the previous examples that were in the previous 2 prompts.
 
 CURRENT BROWSER CONTENT:
 ------------------
@@ -362,8 +500,8 @@ class Crawler:
 			return value
 
 		for index, node_name_index in enumerate(node_names):
-      #node_names=[3,5,75,65,23] where strings[3] will give element type of node 1
-      #don't worry about how parent array looks like
+	  #node_names=[3,5,75,65,23] where strings[3] will give element type of node 1
+	  #don't worry about how parent array looks like
 			node_parent = parent[index]
 			node_name = strings[node_name_index].lower()
 
@@ -520,7 +658,9 @@ class Crawler:
 			meta = ""
 			
 			if node_index in child_nodes:
+				
 				for child in child_nodes.get(node_index):
+					
 					entry_type = child.get('type')
 					entry_value= child.get('value')
 
@@ -577,12 +717,36 @@ if (
 		)
 
 	def get_gpt_command(objective, url, previous_command, browser_content):
-		prompt = prompt_template
+	 
+		
+		prompt = prompt_template[2]
 		prompt = prompt.replace("$objective", objective)
-		prompt = prompt.replace("$url", url[:100])
+		prompt = prompt.replace("$url", url[:50])
 
+		papa=client.chat.completions.create(
+	    model="gpt-3.5-turbo-1106",
+	    messages=[{"role": "user", "content": prompt_template[0]}],
+	    temperature=0,
+	    frequency_penalty=-2.0,
+	    presence_penalty=-2.0)
+
+
+		
+		mumma = prompt.replace("$browser_content", browser_content)
+		response=client.chat.completions.create(
+	    model="gpt-3.5-turbo-1106",
+	    messages=[{"role": "user", "content": prompt_template[1]}],
+	    temperature=0,
+	    frequency_penalty=-2.0,
+	    presence_penalty=-2.0)
+		
 		prompt = prompt.replace("$browser_content", browser_content)
-		response = client.chat.completions.create(model="gpt-3.5-turbo",messages=[{"role": "user", "content": prompt}])
+		response=client.chat.completions.create(
+	    model="gpt-3.5-turbo-1106",
+	    messages=[{"role": "user", "content": prompt}],
+	    temperature=0,
+	    frequency_penalty=-2.0,
+	    presence_penalty=-2.0)
 		return response.choices[0].message.content
 
 	def run_cmd(cmd):
@@ -622,19 +786,24 @@ if (
 	try:
 		while True:
 			browser_content = "\n".join(_crawler.crawl())
+			pattern = r'<text\s.*?>.*?</text>\s*'
+
+# Replace matched patterns with an empty string
+			browser_content = re.sub(pattern, '', browser_content, flags=re.DOTALL)
+			url1=_crawler.page.url[:40]
 			prev_cmd = gpt_cmd
-			gpt_cmd = get_gpt_command(objective, _crawler.page.url, prev_cmd, browser_content)
+			gpt_cmd = get_gpt_command(objective, url1, prev_cmd, browser_content)
 			gpt_cmd = gpt_cmd.strip()
 
 			if not quiet:
-				print("URL: " + _crawler.page.url)
+				print("URL: " + url1)
 				print("Objective: " + objective)
 				print("----------------\n" + browser_content + "\n----------------\n")
 			if len(gpt_cmd) > 0:
 				print("Suggested command: " + gpt_cmd)
 
 
-			command = ""
+			command = input()
 			if command == "r" or command == "":
 				run_cmd(gpt_cmd)
 			elif command == "g":

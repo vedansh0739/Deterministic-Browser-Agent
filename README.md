@@ -1,1 +1,1 @@
-# betternatbot
+send me an email at vedansh0739[at]gmail[dot]com to get the dataset used for finetuning
